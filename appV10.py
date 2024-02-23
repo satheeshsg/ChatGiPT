@@ -18,10 +18,10 @@ import time
 # Load environment variables from .env file
 load_dotenv()
 
-PINECONE_ENVIRONMENT="us-west1-gcp"
+PINECONE_ENVIRONMENT="us-west-2"
 pinecone_environment = PINECONE_ENVIRONMENT
 INFINEON_LOGO_PATH = 'https://i.ibb.co/jznsjfT/pngwing-com.png'
-cloudVectorIndex = 'infidemo2'
+cloudVectorIndex = 'gipt'
 
 
 os.environ["OPENAI_API_KEY"] = st.secrets["OPENAI_API_KEY"]
