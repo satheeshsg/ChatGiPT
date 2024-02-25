@@ -1,19 +1,21 @@
+import os
+import time
+import requests
+import fitz  # PyMuPDF for PDF processing
 import streamlit as st
-from dotenv import load_dotenv 
+from dotenv import load_dotenv
 from PyPDF2 import PdfReader
+from pinecone import Pinecone, ServerlessSpec
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.embeddings import OpenAIEmbeddings
-from langchain.vectorstores import FAISS
+from langchain.vectorstores import FAISS, Pinecone as LC_Pinecone
 from langchain.memory import ConversationBufferMemory
-from langchain.chains import ConversationalRetrievalChain
+from langchain.chains import ConversationalRetrievalChain, question_answering
 from langchain.chat_models import ChatOpenAI
+from langchain_community.embeddings import OpenAIEmbeddings as CommunityOpenAIEmbeddings
+from langchain_community.vectorstores import Pinecone as CommunityPinecone
 from htmlTemplates import css, bot_template, user_template
-import os
-import requests
-import pinecone 
-from langchain.vectorstores import Pinecone
 from langchain.chains.question_answering import load_qa_chain
-import time
 
 # Load environment variables from .env file
 load_dotenv()
@@ -26,7 +28,7 @@ cloudVectorIndex = 'gipt'
 
 os.environ["OPENAI_API_KEY"] = st.secrets["OPENAI_API_KEY"]
 os.environ["PINECONE_API_KEY"] = st.secrets["PINECONE_API_KEY"]
-os.environ["PINECONE_ENVIRONMENT"] = st.secrets["PINECONE_ENVIRONMENT"]
+#os.environ["PINECONE_ENVIRONMENT"] = st.secrets["PINECONE_ENVIRONMENT"]
 
 #openai_api_key = os.getenv("OPENAI_API_KEY")
 #pinecone_api_key = os.getenv("PINECONE_API_KEY")
@@ -67,17 +69,17 @@ def get_answer(query, k=10, score=False): #For vector cloud based answer recover
     return chain.run(input_documents=similar_docs, question=query)
 
 def ensure_cloud_vector_index_initialized():
+    """Ensure the cloud vector index is initialized."""
+    pc = Pinecone(api_key=os.environ.get("PINECONE_API_KEY"))
+    
     if "cloudVectorIndex" not in st.session_state or st.session_state.cloudVectorIndex is None:
         try:
-            pinecone.init(
-                api_key = os.environ["PINECONE_API_KEY"],  
-                environment = os.environ["PINECONE_ENVIRONMENT"]  # next to api key in console
-            )
             embeddings = OpenAIEmbeddings(model="text-embedding-3-large")
-            st.session_state.cloudVectorIndex = Pinecone.from_existing_index(index_name=cloudVectorIndex, embedding=embeddings)
+            st.session_state.cloudVectorIndex = LC_Pinecone.from_existing_index(index_name=cloudVectorIndex, embedding=embeddings)
             st.sidebar.success("Cloud Vector Database connected successfully")
         except Exception as e:
             st.sidebar.error(f"Failed to initialize Cloud Vector Database: {e}")
+    
 
 def handle_userinput_cloud_vector_database(user_question):
     ensure_cloud_vector_index_initialized()
@@ -148,7 +150,7 @@ def handle_userinput_raw_text(user_question):
 
 def main():
     load_dotenv()
-    st.set_page_config(page_title="Chat with AI FAE/SAE", page_icon=":books:")
+    st.set_page_config(page_title="ChatGiPT", page_icon=":books:")
     st.write(css, unsafe_allow_html=True)
     if "conversation" not in st.session_state:
         st.session_state.conversation = None
@@ -166,7 +168,7 @@ def main():
         st.session_state.something = ''
 
 
-    st.header("Chat with AI FAE/SAE :books:")
+    st.header("ChatGiPT :books:")
     st.text_input("Ask a question:", key='widget', on_change=submit)
     user_question = st.session_state.something
 
@@ -220,13 +222,7 @@ def main():
                     st.success("Processing was successful for Raw Text method.")
                 elif st.session_state.processing_option == "Cloud Vector Database":
                     # initialize pinecone
-                    pinecone.init(
-                        api_key=os.environ["PINECONE_API_KEY"],  
-                        environment=os.environ["PINECONE_ENVIRONMENT"]  
-                    )
-                    embeddings = OpenAIEmbeddings(model="text-embedding-3-large")
-                    st.session_state.cloudVectorIndex = Pinecone.from_existing_index(index_name=cloudVectorIndex, embedding=embeddings)
-                    st.success("Processing was successful for Cloud Vector Database method: "+ cloudVectorIndex)
+                    ensure_cloud_vector_index_initialized()
                 else:
                     st.error("Please select a processing method.")
             except Exception as e:
