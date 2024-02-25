@@ -1,7 +1,7 @@
 import os
 import time
 import requests
-import fitz  # PyMuPDF for PDF processing
+#import fitz  # PyMuPDF for PDF processing
 import streamlit as st
 from dotenv import load_dotenv
 from PyPDF2 import PdfReader
