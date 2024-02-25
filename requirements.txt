@@ -1,10 +1,11 @@
-langchain==0.1.5
-pinecone_client==2.2.1
+openai
+tiktoken
+PyMuPDF 
+fitz==0.0.1.dev2
+langchain==0.1.9
+langchain_community==0.0.24
+pinecone==0.1.0
 PyPDF2==3.0.1
 python-dotenv==1.0.1
 Requests==2.31.0
 streamlit==1.31.0
-openai
-tiktoken
-PyMuPDF 
-
