@@ -4,7 +4,7 @@ PyMuPDF
 fitz
 langchain
 langchain_community
-pinecone
+pinecone-client
 PyPDF2
 python-dotenv
 Requests
