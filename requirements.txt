@@ -9,3 +9,4 @@ PyPDF2
 python-dotenv
 Requests
 streamlit
+faiss-cpu
